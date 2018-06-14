@@ -15,11 +15,14 @@ struct arguments {
 	double **matrix;
 };
 
+
 struct position {
 	int row;
 	int col;
-}
+};
 
+	static struct arguments matrices[2];
+	static struct arguments result;
 void *print_matrix(void * arg_void_ptr) {
 	struct arguments *arg_ptr = (struct arguments *)arg_void_ptr;
 	cout << "Size = (" << arg_ptr->row << "," << arg_ptr->col << ")" << endl;
@@ -48,17 +51,30 @@ bool validateOP(struct arguments arg1,struct arguments arg2, int command) {
 }
 
 
-void *calculateResult(void *p){
-	
+
+void *add(void *p){
+	struct position *pos = (struct position *)p;
+	int a = pos->row;
+	int b = pos->col;
+	printf("%d %d\n", a, b);
+	result.matrix[a][b] = matrices[0].matrix[a][b] + matrices[1].matrix[a][b]; 	
 	return NULL;
 }
 
+void *subtract(void *p){
+	struct position *pos = (struct position *)p;
+	int a = pos->row;
+	int b = pos->col;
+	printf("%d %d\n", a, b);
+	result.matrix[a][b] = matrices[0].matrix[a][b] - matrices[1].matrix[a][b]; 	
+	return NULL;
+}
 int main() {
+
+
 	int command = 0;
 	string line;
-	struct arguments matrices[2];
 	
-	static struct arguments result;
 	
 	// Read matrices from file
 	ifstream inFile("inputfile");
@@ -113,18 +129,29 @@ int main() {
 					}
 
 					result.matrix = m; 
-					print_matrix(&result);
 					
 					int numThread = result.row * result.col;
 
-					cout << endl << numThread << endl;
-
+					struct position pos;
+					int k = 0;
 					pthread_t tid[numThread];
-					for(int i = 0; i < numThread; i++){
-						
+					for(int i = 0; i < result.row; i++){
+						for(int j=0;j<result.col;j++) {
+							pos.row = i;
+							pos.col = j;
+							cout << endl <<"inside loop " << pos.row << " " << pos.col << endl;
+							pthread_create(&tid[k++],NULL,add,&pos);	
+							cout << tid[k-1] << endl;
+						}
+
+
 					}
+					//wait until all thread execution is complete	
+					for (int i =0 ;i<numThread; i++)
+						pthread_join(tid[i],NULL);	
 
 
+					print_matrix(&result);
 				} 
 					
 
@@ -132,8 +159,35 @@ int main() {
 
 			case COM_SUB:
 				if (validateOP(matrices[0],matrices[1], COM_SUB)) {
+					result.row = matrices[0].row;
+					result.col = matrices[0].col;	
+					double **m = new double*[result.row];
+					for(int i = 0; i < result.row; i++) {
+						m[i] = new double[result.col];
+					}
 
-				}
+					result.matrix = m; 
+					
+					int numThread = result.row * result.col;
+
+					struct position pos;
+					int k = 0;
+					pthread_t tid[numThread];
+					for(int i = 0; i < result.row; i++){
+						for(int j=0;j<result.col;j++) {
+							pos.row = i;
+							pos.col = j;
+							pthread_create(&tid[k++],NULL,subtract,&pos);	
+							cout << tid[k-1] << endl;
+						}
+					}
+					//wait until all thread execution is complete	
+					for (int i =0 ;i<numThread; i++)
+						pthread_join(tid[i],NULL);	
+
+
+					print_matrix(&result);
+				} 
 			break;
 
 			case COM_MUL:
