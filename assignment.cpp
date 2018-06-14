@@ -15,6 +15,11 @@ struct arguments {
 	double **matrix;
 };
 
+struct position {
+	int row;
+	int col;
+}
+
 void *print_matrix(void * arg_void_ptr) {
 	struct arguments *arg_ptr = (struct arguments *)arg_void_ptr;
 	cout << "Size = (" << arg_ptr->row << "," << arg_ptr->col << ")" << endl;
@@ -27,16 +32,33 @@ void *print_matrix(void * arg_void_ptr) {
 	return NULL;
 }
 
-bool validateOP(struct arguments args,int command) {
-	if (command == COM_ADD || command == COM_SUB) {
 
+
+bool validateOP(struct arguments arg1,struct arguments arg2, int command) {
+	if (command == COM_ADD || command == COM_SUB) {
+		if ((arg1.row == arg2.row) && (arg1.col == arg2.col))
+			return true;
+	} else if (command == COM_MUL) {
+		if (arg1.col == arg2.row)
+			return true;
 	}
+	
+	return false;
 
 }
+
+
+void *calculateResult(void *p){
+	
+	return NULL;
+}
+
 int main() {
 	int command = 0;
 	string line;
 	struct arguments matrices[2];
+	
+	static struct arguments result;
 	
 	// Read matrices from file
 	ifstream inFile("inputfile");
@@ -53,44 +75,77 @@ int main() {
 				}
 			}			
 
-		
 			matrices[k].matrix = m;			
-			print_matrix(matrices);
-
+			print_matrix(& matrices[k]);
 
 		}
-		inFile.close();
+		inFile.close(); // close file after successful reading
 	} else {
 		cout << "File could not be opened" << endl;
 	}
+	// test code-------------------------------------------
+	if (validateOP(matrices[0],matrices[1],COM_SUB)) 
+		cout << "TRUE" << endl;
+	else 
+		cout << "FALSE" << endl;
+	// test code-------------------------------------------
+
+
 	// Show menu options 
 	while (true) {
 		cout << "Select Operations " << endl;
-		cout << "\tAddition       (1)" << endl;
-		cout << "\tSubtraction    (2)" << endl;
-		cout << "\tMultiplication (3)" << endl;
-		cout << "\tExit           (4)" << endl;
+		cout << "\tAddition       (1) " << (validateOP(matrices[0],matrices[1], COM_ADD) ? "Y" : "N") << endl;
+		cout << "\tSubtraction    (2) " << (validateOP(matrices[0],matrices[1], COM_SUB) ? "Y" : "N") << endl;
+		cout << "\tMultiplication (3) " << (validateOP(matrices[0],matrices[1], COM_MUL) ? "Y" : "N") << endl;
+		cout << "\tExit           (4) " << endl;
 		cout << "Command: ";
 		cin >> command;	
 		
+		if (command == COM_EXIT) break;
 		switch(command) {
 			case COM_ADD:
-//				validateOP(matrix, COM_ADD);
+				if (validateOP(matrices[0],matrices[1], COM_ADD)) {
+					result.row = matrices[0].row;
+					result.col = matrices[0].col;	
+					double **m = new double*[result.row];
+					for(int i = 0; i < result.row; i++) {
+						m[i] = new double[result.col];
+					}
+
+					result.matrix = m; 
+					print_matrix(&result);
+					
+					int numThread = result.row * result.col;
+
+					cout << endl << numThread << endl;
+
+					pthread_t tid[numThread];
+					for(int i = 0; i < numThread; i++){
+						
+					}
+
+
+				} 
+					
 
 			break;
 
 			case COM_SUB:
+				if (validateOP(matrices[0],matrices[1], COM_SUB)) {
 
+				}
 			break;
 
 			case COM_MUL:
+				if (validateOP(matrices[0],matrices[1], COM_MUL)) {
+
+				}
 			break;
 
 			default:
 				cout << "not valid option" << endl;
 		}
 		
-		if (command == COM_EXIT) break;
 	
 
 
