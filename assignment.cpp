@@ -20,9 +20,15 @@ struct position {
 	int row;
 	int col;
 };
+struct position_mul {
+	double *e_row;
+	double *e_col;
+	int n_row;
+	int n_col;
+};
 
-	static struct arguments matrices[2];
-	static struct arguments result;
+static struct arguments matrices[2];
+static struct arguments result;
 void *print_matrix(void * arg_void_ptr) {
 	struct arguments *arg_ptr = (struct arguments *)arg_void_ptr;
 	cout << "Size = (" << arg_ptr->row << "," << arg_ptr->col << ")" << endl;
@@ -67,6 +73,17 @@ void *subtract(void *p){
 	int b = pos->col;
 	printf("%d %d\n", a, b);
 	result.matrix[a][b] = matrices[0].matrix[a][b] - matrices[1].matrix[a][b]; 	
+	return NULL;
+}
+
+
+void *multiply(void *p){
+	struct position_mul *pos = (struct position_mul *)p;
+	int a = pos->n_row;
+	int b = pos->n_col;
+	printf("%d %d\n", a, b);
+	result.matrix[a][b] = 2; 	
+	//result.matrix[a][b] = c++; 	
 	return NULL;
 }
 int main() {
@@ -193,7 +210,56 @@ int main() {
 			case COM_MUL:
 				if (validateOP(matrices[0],matrices[1], COM_MUL)) {
 
-				}
+					struct position_mul pos;
+
+					result.row = matrices[0].row;
+					result.col = matrices[1].col;	
+					cout << result.row << " by " << result.col;
+					double **m = new double*[result.row];
+					for(int i = 0; i < result.row; i++) {
+						m[i] = new double[result.col];
+					}
+
+					// take all entire row 
+					double *r = new double[matrices[0].col];
+					double *c = new double[matrices[0].col];
+					for (int j = 0; j < matrices[0].row; j++) { 
+					for (int i = 0; i < matrices[0].col; i++) {
+						r[i] = matrices[0].matrix[j][i];
+						c[i] = matrices[1].matrix[i][j];
+
+						}
+						pos.e_row = r; 
+						pos.e_col = c;
+					}
+
+					result.matrix = m; 
+					int numThread = result.row * result.col;
+					pthread_t tid[numThread];
+					int k = 0;
+					for (int i = 0; i < result.row; i++) {
+						for(int j = 0; j < result.col;j++) {
+							pos.n_row = i;
+							pos.n_col = j;
+						
+							pthread_create(&tid[k],NULL,multiply,&pos);	
+
+							cout << endl << pos.n_row << " | "  <<  pos.n_col<< endl;
+							cout << tid[k] << endl;
+							k = k+1;
+						}
+					}	
+
+
+					for (int i =0 ;i<numThread; i++)
+						pthread_join(tid[i],NULL);	
+
+					
+
+
+					result.matrix = m; 
+					print_matrix(&result);
+				}		
 			break;
 
 			default:
