@@ -15,11 +15,11 @@ struct arguments {
 	double **matrix;
 };
 
-
 struct position {
 	int row;
 	int col;
 };
+
 struct position_mul {
 	double *e_row;
 	double *e_col;
@@ -81,9 +81,13 @@ void *multiply(void *p){
 	struct position_mul *pos = (struct position_mul *)p;
 	int a = pos->n_row;
 	int b = pos->n_col;
-	printf("%d %d\n", a, b);
+//	printf("%d %d\n", a, b);
 	result.matrix[a][b] = 2; 	
-	//result.matrix[a][b] = c++; 	
+	double sum = 0;
+	for (int i = 0; i<matrices[0].col; i++) {
+	 sum = sum + ((pos->e_row[i])*(pos->e_col[i]));
+	}	
+	result.matrix[a][b] = sum;
 	return NULL;
 }
 int main() {
@@ -220,32 +224,42 @@ int main() {
 						m[i] = new double[result.col];
 					}
 
-					// take all entire row 
-					double *r = new double[matrices[0].col];
-					double *c = new double[matrices[0].col];
-					for (int j = 0; j < matrices[0].row; j++) { 
-					for (int i = 0; i < matrices[0].col; i++) {
-						r[i] = matrices[0].matrix[j][i];
-						c[i] = matrices[1].matrix[i][j];
 
-						}
-						pos.e_row = r; 
-						pos.e_col = c;
-					}
+					
 
+				
 					result.matrix = m; 
 					int numThread = result.row * result.col;
 					pthread_t tid[numThread];
 					int k = 0;
 					for (int i = 0; i < result.row; i++) {
+						
 						for(int j = 0; j < result.col;j++) {
 							pos.n_row = i;
 							pos.n_col = j;
-						
+
+							// row and column
+							//
+							//
+								
+
+								
+							double *r = new double[matrices[0].col];
+							for (int m =0 ; m < matrices[0].col;m++)
+								r[m] = matrices[0].matrix[i][m];
+
+
+							double *c = new double[matrices[1].row];
+							for (int n = 0 ; n < matrices[1].row;n++)
+								c[n] = matrices[1].matrix[n][j];
+							pos.e_row = r;
+							pos.e_col = c;
+
+
 							pthread_create(&tid[k],NULL,multiply,&pos);	
 
 							cout << endl << pos.n_row << " | "  <<  pos.n_col<< endl;
-							cout << tid[k] << endl;
+							//cout << tid[k] << endl;
 							k = k+1;
 						}
 					}	
